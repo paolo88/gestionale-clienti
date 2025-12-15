@@ -1,0 +1,68 @@
+http://localhost:3000
+
+PER SERVER
+cmd
+npm run dev
+
+# Revenue Monitor
+
+Un'applicazione web moderna per il monitoraggio dei fatturati, analisi clienti e gestione mandanti.
+
+## Stack Tecnologico
+
+- **Frontend:** Next.js 15 (App Router), React, Tailwind CSS, Shadcn UI
+- **Backend:** Supabase (PostgreSQL, Auth, RLS)
+- **Lingua:** TypeScript
+
+## Funzionalità
+
+- **Dashboard:** Analisi KPI (YTD, YoY), trend mensili e classifiche.
+- **Clienti:** Gestione anagrafica completa e analisi dettagliata (Lifetime Value, Mix Mandanti).
+- **Aziende/Mandanti:** Gestione mandanti e analisi fatturato correlato.
+- **Fatturati:** Inserimento manuale e **Importazione CSV** massiva.
+- **Sicurezza:** Autenticazione tramite Supabase Auth e protezione rotte via Middleware.
+
+## Configurazione Locale
+
+1.  **Requisiti:** Node.js 18+, account Supabase.
+2.  **Variabili d'ambiente:**
+    Crea un file `.env.local` nella root del progetto:
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+    ```
+3.  **Installazione dipendenze:**
+    ```bash
+    npm install
+    ```
+4.  **Database Setup:**
+    Esegui lo script `schema.sql` nella SQL Query editor di Supabase per creare tabelle e policy.
+5.  **Avvio Server di Sviluppo:**
+    ```bash
+    npm run dev
+    ```
+    Accedi a `http://localhost:3000`.
+
+## Deployment
+
+Questa applicazione è ottimizata per il deployment su **Vercel**.
+
+1.  Pusha il codice su GitHub.
+2.  Importa il progetto su Vercel.
+3.  Configura le variabili d'ambiente (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) nelle impostazioni del progetto su Vercel.
+4.  Deploy.
+
+## Struttura CSV Importazione
+
+Il file CSV deve avere le seguenti colonne (l'ordine non importa se gli header sono corretti):
+- `period` (Formato: YYYY-MM o YYYY-MM-DD)
+- `client_name`
+- `company_name`
+- `amount`
+
+Esempio:
+```csv
+period,client_name,company_name,amount
+2024-01,Cliente A,Azienda X,500.00
+2024-01,Cliente B,Azienda X,1200.50
+```
