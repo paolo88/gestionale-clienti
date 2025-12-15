@@ -6,7 +6,7 @@ export const clientSchema = z.object({
     channel: z.string().nullish(),
     province: z.string().max(2, "Provincia max 2 caratteri").nullish().or(z.literal("")),
     notes: z.string().nullish(),
-    is_active: z.boolean().default(true),
+    is_active: z.boolean().default(true).optional(),
 })
 
 export type ClientFormValues = z.infer<typeof clientSchema>
