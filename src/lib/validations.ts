@@ -15,7 +15,7 @@ export const companySchema = z.object({
     name: z.string().min(1, "Il nome è obbligatorio"),
     category: z.string().nullish(),
     notes: z.string().nullish(),
-    is_active: z.boolean().default(true),
+    is_active: z.boolean().default(true).optional(),
 })
 
 export type CompanyFormValues = z.infer<typeof companySchema>

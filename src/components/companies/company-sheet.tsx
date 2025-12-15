@@ -53,7 +53,7 @@ export function CompanySheet({ company }: CompanySheetProps) {
                 </SheetHeader>
                 <div className="py-4">
                     <CompanyForm
-                        initialData={company}
+                        initialData={company || undefined}
                         onSuccess={() => setOpen(false)}
                     />
                 </div>
