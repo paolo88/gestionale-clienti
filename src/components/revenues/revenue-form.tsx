@@ -30,7 +30,7 @@ export function RevenueForm({ clients, companies, onSuccess, initialData }: Reve
     const router = useRouter()
 
     const form = useForm<RevenueFormValues>({
-        resolver: zodResolver(revenueSchema),
+        resolver: zodResolver(revenueSchema) as any,
         defaultValues: {
             client_id: initialData?.client_id || "",
             company_id: initialData?.company_id || "",
