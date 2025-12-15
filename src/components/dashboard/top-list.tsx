@@ -10,10 +10,12 @@ import { formatCurrency } from "@/lib/utils"
 interface TopListProps {
     title: string;
     description: string;
-    items: { name: string; amount: number }[];
+    items: { name: string; amount: number; percentage?: number }[];
+    valueLabel?: string;
+    isValuePercentage?: boolean;
 }
 
-export function TopList({ title, description, items }: TopListProps) {
+export function TopList({ title, description, items, valueLabel, isValuePercentage }: TopListProps) {
     return (
         <Card className="col-span-3">
             <CardHeader>
@@ -30,7 +32,12 @@ export function TopList({ title, description, items }: TopListProps) {
                                 <div className="ml-0 space-y-1">
                                     <p className="text-sm font-medium leading-none">{item.name}</p>
                                 </div>
-                                <div className="ml-auto font-medium">{formatCurrency(item.amount)}</div>
+                                <div className="ml-auto font-medium">
+                                    {isValuePercentage
+                                        ? `${item.amount.toFixed(1)}${valueLabel || '%'}`
+                                        : formatCurrency(item.amount)
+                                    }
+                                </div>
                             </div>
                         ))
                     )}
