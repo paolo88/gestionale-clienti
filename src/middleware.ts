@@ -8,6 +8,10 @@ export async function middleware(request: NextRequest) {
         },
     })
 
+    console.log("Middleware executing");
+    console.log("URL defined:", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log("KEY defined:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
