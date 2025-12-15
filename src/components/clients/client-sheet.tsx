@@ -55,7 +55,7 @@ export function ClientSheet({ client }: ClientSheetProps) {
                 </SheetHeader>
                 <div className="py-4">
                     <ClientForm
-                        initialData={client}
+                        initialData={client || undefined}
                         onSuccess={() => setOpen(false)}
                     />
                 </div>
