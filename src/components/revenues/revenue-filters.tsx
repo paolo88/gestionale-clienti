@@ -22,6 +22,9 @@ export function RevenueFilters({ clients, companies }: RevenueFiltersProps) {
 
     const currentClient = searchParams.get("client_id") || "all"
     const currentCompany = searchParams.get("company_id") || "all"
+    const currentChannel = searchParams.get("channel") || "all"
+
+    const channels = ["GDO", "Horeca", "Ingrosso", "Dettaglio", "Farmacia", "Alimentare", "Industria"];
 
     function updateFilter(key: string, value: string) {
         const params = new URLSearchParams(searchParams.toString())
@@ -37,10 +40,30 @@ export function RevenueFilters({ clients, companies }: RevenueFiltersProps) {
         router.push("/revenues")
     }
 
-    const hasFilters = currentClient !== "all" || currentCompany !== "all"
+    const hasFilters = currentClient !== "all" || currentCompany !== "all" || currentChannel !== "all"
 
     return (
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-neutral-50 p-4 rounded-lg border border-neutral-200">
+            <div className="flex flex-col space-y-2 w-full sm:w-[200px]">
+                <span className="text-xs font-medium text-neutral-500">Canale</span>
+                <Select
+                    value={currentChannel}
+                    onValueChange={(val) => updateFilter("channel", val)}
+                >
+                    <SelectTrigger>
+                        <SelectValue placeholder="Tutti i canali" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Tutti i canali</SelectItem>
+                        {channels.map((c) => (
+                            <SelectItem key={c} value={c}>
+                                {c}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
             <div className="flex flex-col space-y-2 w-full sm:w-[200px]">
                 <span className="text-xs font-medium text-neutral-500">Cliente</span>
                 <Select

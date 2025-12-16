@@ -6,7 +6,7 @@ import { Euro, TrendingUp, Wallet } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 // Reusing Dashboard components for consistency
 import { TrendChart } from "@/components/dashboard/trend-chart"
-import { TopList } from "@/components/dashboard/top-list"
+import { DistributionPieChart } from "@/components/dashboard/distribution-pie-chart"
 import { ClientDetailFilters } from "@/components/clients/client-detail-filters"
 
 type Props = {
@@ -38,13 +38,7 @@ export default async function ClientDetailPage(props: Props) {
                 <ClientDetailFilters companies={companyList} />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-                <KPICard
-                    title="Valore Totale (LTV)"
-                    value={formatCurrency(data.lifetimeValue)}
-                    icon={Wallet}
-                    description="Fatturato totale storico"
-                />
+            <div className="grid gap-4 md:grid-cols-2">
                 <KPICard
                     title="Fatturato YTD"
                     value={formatCurrency(data.currentYTD)}
@@ -60,18 +54,17 @@ export default async function ClientDetailPage(props: Props) {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                {/* Repurposing TrendChart to show simple trend since we only have one series for now in the interface */}
-                {/* For MVP, we pass 'current' as the only data. 'previous' set to 0 to hide or we could adapt chart */}
-                <TrendChart data={data.monthlyTrend.map(t => ({ name: t.name, current: t.amount, previous: 0 }))} />
-                <div className="col-span-3 space-y-4">
-                    <TopList
-                        title="Mix Aziende"
-                        description="Distribuzione fatturato per azienda mandante"
-                        items={data.companyMix}
-                        valueLabel="%"
-                        isValuePercentage
-                    />
-                </div>
+                <TrendChart
+                    data={data.monthlyTrend.map(t => ({ name: t.name, current: t.amount, previous: 0 }))}
+                    annualData={data.annualTrend}
+                />
+
+                {/* Pie Chart for Company Mix */}
+                <DistributionPieChart
+                    title="Mix Aziende"
+                    description="Distribuzione fatturato per azienda mandante"
+                    data={data.companyMix}
+                />
             </div>
 
             <div className="col-span-4 bg-white p-6 rounded-lg border border-neutral-200">

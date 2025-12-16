@@ -4,31 +4,40 @@ import { createClient } from "@/lib/server-supabase"
 import { revenueSchema, RevenueFormValues } from "@/lib/validations"
 import { revalidatePath } from "next/cache"
 
-export async function getRevenues(filters?: { client_id?: string; company_id?: string }) {
+export async function getRevenues(filters?: { client_id?: string; company_id?: string; channel?: string }) {
     const supabase = await createClient()
 
     let query = supabase
         .from("revenues")
         .select(`
             *,
-            clients (name),
+            clients (name, channel),
             companies (name)
         `)
         .order("period", { ascending: false })
 
-    if (filters?.client_id) {
+    if (filters?.client_id && filters.client_id !== 'all') {
         query = query.eq("client_id", filters.client_id)
     }
 
-    if (filters?.company_id) {
+    if (filters?.company_id && filters.company_id !== 'all') {
         query = query.eq("company_id", filters.company_id)
     }
 
-    const { data, error } = await query
+    const { data: rawData, error } = await query
 
     if (error) {
         console.error(error)
         return null
+    }
+
+    // Filter by Channel if requested (Client's channel)
+    let data = rawData;
+    if (filters?.channel && filters.channel !== 'all') {
+        data = rawData.filter((r: any) => {
+            const clientChannel = Array.isArray(r.clients) ? r.clients[0]?.channel : r.clients?.channel;
+            return clientChannel === filters.channel;
+        })
     }
 
     return data

@@ -27,22 +27,24 @@ export function TrendChart({ data, annualData }: TrendChartProps) {
                 </div>
                 <div className="flex space-x-2">
                     {showToggle && (
-                        <>
+                        <div className="flex bg-neutral-100 p-1 rounded-md">
                             <Button
-                                variant={view === 'monthly' ? "default" : "outline"}
+                                variant={view === 'monthly' ? "secondary" : "ghost"}
                                 size="sm"
                                 onClick={() => setView('monthly')}
+                                className="h-8"
                             >
                                 Mensile
                             </Button>
                             <Button
-                                variant={view === 'annual' ? "default" : "outline"}
+                                variant={view === 'annual' ? "secondary" : "ghost"}
                                 size="sm"
                                 onClick={() => setView('annual')}
+                                className="h-8"
                             >
                                 Annuale
                             </Button>
-                        </>
+                        </div>
                     )}
                 </div>
             </CardHeader>

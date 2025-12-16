@@ -12,10 +12,11 @@ export interface CompanyAnalytics {
     currentYTD: number;
     previousYTD: number;
     monthlyTrend: { name: string; amount: number }[];
-    clientMix: { name: string; amount: number; percentage: number }[];
+    annualTrend: { name: string; total: number }[];
+    clientMix: { name: string; amount: number; percentage: number; value: number }[];
 }
 
-export async function getCompanyAnalytics(companyId: string, filterClientId?: string): Promise<CompanyAnalytics | null> {
+export async function getCompanyAnalytics(companyId: string, filterClientId?: string, filterChannel?: string): Promise<CompanyAnalytics | null> {
     const supabase = await createClient()
     const now = new Date()
     const currentYear = now.getFullYear()
@@ -35,7 +36,7 @@ export async function getCompanyAnalytics(companyId: string, filterClientId?: st
         .select(`
             amount,
             period,
-            clients (id, name)
+            clients (id, name, channel)
         `)
         .eq("company_id", companyId)
         .order("period", { ascending: true })
@@ -44,9 +45,18 @@ export async function getCompanyAnalytics(companyId: string, filterClientId?: st
         query = query.eq("client_id", filterClientId)
     }
 
-    const { data: revenues, error: revError } = await query
+    const { data: rawRevenues, error: revError } = await query
 
     if (revError) throw new Error(revError.message)
+
+    // Filter by Channel in memory since Supabase join filtering syntax is verbose for this or simple enough
+    let revenues = rawRevenues;
+    if (filterChannel && filterChannel !== 'all') {
+        revenues = revenues?.filter((r: any) => {
+            const clientChannel = Array.isArray(r.clients) ? r.clients[0]?.channel : r.clients?.channel;
+            return clientChannel === filterChannel;
+        })
+    }
 
     let lifetimeValue = 0
     let currentYTD = 0
@@ -54,6 +64,10 @@ export async function getCompanyAnalytics(companyId: string, filterClientId?: st
     const clientMap: Record<string, number> = {}
 
     const previousYear = currentYear - 1
+
+    // Annual Trend
+    const annualData: Record<number, number> = {}
+    for (let i = 0; i < 5; i++) annualData[currentYear - 4 + i] = 0
 
     const monthlyData: Record<number, number> = {}
     for (let i = 0; i < 12; i++) monthlyData[i] = 0
@@ -64,6 +78,10 @@ export async function getCompanyAnalytics(companyId: string, filterClientId?: st
         const year = date.getFullYear()
 
         lifetimeValue += amount
+
+        if (annualData[year] !== undefined) {
+            annualData[year] += amount
+        }
 
         if (year === currentYear) {
             currentYTD += amount
@@ -85,11 +103,17 @@ export async function getCompanyAnalytics(companyId: string, filterClientId?: st
         amount: monthlyData[parseInt(key)]
     }))
 
+    const annualTrend = Object.keys(annualData).map(key => ({
+        name: key,
+        total: annualData[parseInt(key)]
+    }))
+
     const clientMix = Object.entries(clientMap)
         .map(([name, amount]) => ({
             name,
             amount,
-            percentage: lifetimeValue > 0 ? (amount / lifetimeValue) * 100 : 0
+            percentage: lifetimeValue > 0 ? (amount / lifetimeValue) * 100 : 0,
+            value: amount
         }))
         .sort((a, b) => b.amount - a.amount)
 
@@ -99,6 +123,7 @@ export async function getCompanyAnalytics(companyId: string, filterClientId?: st
         currentYTD,
         previousYTD,
         monthlyTrend,
+        annualTrend,
         clientMix
     }
 }

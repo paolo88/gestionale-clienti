@@ -5,7 +5,7 @@ import { KPICard } from "@/components/layout/kpi-card"
 import { Euro, TrendingUp, Wallet } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { TrendChart } from "@/components/dashboard/trend-chart"
-import { TopList } from "@/components/dashboard/top-list"
+import { DistributionPieChart } from "@/components/dashboard/distribution-pie-chart"
 import { CompanyDetailFilters } from "@/components/companies/company-detail-filters"
 
 type Props = {
@@ -17,9 +17,11 @@ export default async function CompanyDetailPage(props: Props) {
     const params = await props.params
     const searchParams = await props.searchParams
 
+    // Explicitly grab client_id and channel strings
     const filterClientId = typeof searchParams.client_id === 'string' ? searchParams.client_id : undefined
+    const filterChannel = typeof searchParams.channel === 'string' ? searchParams.channel : undefined
 
-    const data = await getCompanyAnalytics(params.id, filterClientId)
+    const data = await getCompanyAnalytics(params.id, filterClientId, filterChannel)
     const clients = await getClients() || []
 
     if (!data) return <div>Azienda non trovata</div>
@@ -36,13 +38,7 @@ export default async function CompanyDetailPage(props: Props) {
                 <CompanyDetailFilters clients={clientList} />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-                <KPICard
-                    title="Valore Totale (LTV)"
-                    value={formatCurrency(data.lifetimeValue)}
-                    icon={Wallet}
-                    description="Fatturato totale storico"
-                />
+            <div className="grid gap-4 md:grid-cols-2">
                 <KPICard
                     title="Fatturato YTD"
                     value={formatCurrency(data.currentYTD)}
@@ -58,16 +54,15 @@ export default async function CompanyDetailPage(props: Props) {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <TrendChart data={data.monthlyTrend.map(t => ({ name: t.name, current: t.amount, previous: 0 }))} />
-                <div className="col-span-3 space-y-4">
-                    <TopList
-                        title="Mix Clienti"
-                        description="Distribuzione fatturato per cliente"
-                        items={data.clientMix}
-                        valueLabel="%"
-                        isValuePercentage
-                    />
-                </div>
+                <TrendChart
+                    data={data.monthlyTrend.map(t => ({ name: t.name, current: t.amount, previous: 0 }))}
+                    annualData={data.annualTrend}
+                />
+                <DistributionPieChart
+                    title="Mix Clienti"
+                    description="Distribuzione fatturato per cliente"
+                    data={data.clientMix.map(c => ({ name: c.name, value: c.value }))}
+                />
             </div>
 
             <div className="col-span-4 bg-white p-6 rounded-lg border border-neutral-200">

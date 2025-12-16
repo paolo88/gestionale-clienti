@@ -26,8 +26,9 @@ export default async function RevenuesPage(props: Props) {
     const searchParams = await props.searchParams
     const cid = typeof searchParams.client_id === 'string' ? searchParams.client_id : undefined
     const compId = typeof searchParams.company_id === 'string' ? searchParams.company_id : undefined
+    const channel = typeof searchParams.channel === 'string' ? searchParams.channel : undefined
 
-    const revenues = await getRevenues({ client_id: cid, company_id: compId })
+    const revenues = await getRevenues({ client_id: cid, company_id: compId, channel })
     const clients = await getClients() || []
     const companies = await getCompanies() || []
 

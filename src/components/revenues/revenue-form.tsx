@@ -153,8 +153,8 @@ export function RevenueForm({ clients, companies, onSuccess, initialData }: Reve
                                 ) : (
                                     <Select
                                         onValueChange={(val) => {
-                                            // Set to Jan 1st of selected year
-                                            const date = new Date(parseInt(val), 0, 1);
+                                            // Set to Jan 1st of selected year at 12:00 to avoid timezone shifts
+                                            const date = new Date(parseInt(val), 0, 1, 12, 0, 0);
                                             field.onChange(date)
                                         }}
                                         defaultValue={field.value ? new Date(field.value).getFullYear().toString() : currentYear.toString()}
