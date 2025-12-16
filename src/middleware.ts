@@ -1,79 +1,12 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-    let response = NextResponse.next({
-        request: {
-            headers: request.headers,
-        },
-    })
-
-    console.log("Middleware executing");
-    console.log("URL defined:", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log("KEY defined:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-        console.error("Missing Supabase credentials");
-        return new NextResponse(
-            `Configuration Error: Missing Supabase Credentials. \nURL defined: ${!!supabaseUrl}\nKey defined: ${!!supabaseKey}\nPlease check Vercel Environment Variables.`,
-            { status: 500 }
-        );
-    }
-
-    const supabase = createServerClient(
-        supabaseUrl,
-        supabaseKey,
-        {
-            cookies: {
-                getAll() {
-                    return request.cookies.getAll()
-                },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) => {
-                        request.cookies.set(name, value)
-                    })
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    })
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        response.cookies.set(name, value, options)
-                    )
-                },
-            },
-        }
-    )
-
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/auth')) {
-        // Redirect to login if no user and trying to access protected route
-        return NextResponse.redirect(new URL('/login', request.url))
-    }
-
-    if (user && request.nextUrl.pathname.startsWith('/login')) {
-        // Redirect to dashboard if user is already logged in
-        return NextResponse.redirect(new URL('/', request.url))
-    }
-
-    return response
+    console.log("Middleware hitting:", request.nextUrl.pathname);
+    return NextResponse.next()
 }
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * Feel free to modify this pattern to include more paths.
-         */
         '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }
