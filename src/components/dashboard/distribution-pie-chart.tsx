@@ -36,13 +36,15 @@ export function DistributionPieChart({ title, description, data, colors = COLORS
                             dataKey="value"
                             label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
                                 const RADIAN = Math.PI / 180;
+                                const safeMidAngle = midAngle ?? 0;
+                                const safePercent = percent ?? 0;
                                 const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                                const x = cx + radius * Math.cos(-(midAngle || 0) * RADIAN);
-                                const y = cy + radius * Math.sin(-(midAngle || 0) * RADIAN);
+                                const x = cx + radius * Math.cos(-safeMidAngle * RADIAN);
+                                const y = cy + radius * Math.sin(-safeMidAngle * RADIAN);
 
-                                return (percent || 0) > 0.05 ? (
+                                return safePercent > 0.05 ? (
                                     <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-                                        {`${(percent * 100).toFixed(0)}%`}
+                                        {`${(safePercent * 100).toFixed(0)}%`}
                                     </text>
                                 ) : null;
                             }}
