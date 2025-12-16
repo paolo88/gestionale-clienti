@@ -1,4 +1,5 @@
 # Revenue Monitor
+Ultimo aggiornamento: 16 Dicembre 2025 (Fix Deployment)
 
 Un'applicazione web moderna per il monitoraggio dei fatturati, analisi clienti e gestione mandanti.
 
