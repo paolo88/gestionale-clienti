@@ -1,7 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   env: {
     // INCOLLA QUI LE TUE CHIAVI TRA LE VIRGOLETTE
     // Esempio: NEXT_PUBLIC_SUPABASE_URL: "https://..."
