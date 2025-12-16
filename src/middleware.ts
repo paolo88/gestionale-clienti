@@ -12,9 +12,20 @@ export async function middleware(request: NextRequest) {
     console.log("URL defined:", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
     console.log("KEY defined:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+        console.error("Missing Supabase credentials");
+        return new NextResponse(
+            `Configuration Error: Missing Supabase Credentials. \nURL defined: ${!!supabaseUrl}\nKey defined: ${!!supabaseKey}\nPlease check Vercel Environment Variables.`,
+            { status: 500 }
+        );
+    }
+
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        supabaseUrl,
+        supabaseKey,
         {
             cookies: {
                 getAll() {
