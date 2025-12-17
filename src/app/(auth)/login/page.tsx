@@ -29,7 +29,7 @@ export default function LoginPage() {
                         Accedi
                     </h2>
                     <p className="mt-2 text-center text-sm text-neutral-600">
-                        Gestionale Clienti & Fatturati
+                        Agenzia Chiaramello
                     </p>
                 </div>
 

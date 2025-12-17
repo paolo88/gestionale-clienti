@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Revenue Monitor",
-  description: "Advanced revenue monitoring for clients and companies",
+  title: "Agenzia Chiaramello",
+  description: "Gestionale per Agenzia Chiaramello",
 };
 
 export default function RootLayout({

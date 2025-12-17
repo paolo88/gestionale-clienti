@@ -49,7 +49,7 @@ export function Sidebar() {
             <div className="px-3 py-2">
                 <Link href="/" className="flex items-center pl-3 mb-14">
                     <h1 className="text-xl font-bold tracking-tight text-neutral-900">
-                        Revenue Monitor
+                        Agenzia Chiaramello
                     </h1>
                 </Link>
                 <div className="space-y-1">
