@@ -5,12 +5,17 @@ import { clientSchema, ClientFormValues } from "@/lib/validations"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
-export async function getClients(query?: string) {
+export async function getClients(query?: string, channel?: string) {
     const supabase = await createClient()
     let builder = supabase.from("clients").select("*").order("name")
 
     if (query) {
-        builder = builder.ilike("name", `%${query}%`)
+        // Search in name, vat_number, or province
+        builder = builder.or(`name.ilike.%${query}%,vat_number.ilike.%${query}%,province.ilike.%${query}%`)
+    }
+
+    if (channel && channel !== 'all') {
+        builder = builder.eq("channel", channel)
     }
 
     const { data, error } = await builder

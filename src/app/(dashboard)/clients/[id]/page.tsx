@@ -43,7 +43,8 @@ export default async function ClientDetailPage(props: Props) {
                     title="Fatturato YTD"
                     value={formatCurrency(data.currentYTD)}
                     icon={Euro}
-                    description="Anno corrente"
+                    trend={data.deltaPercentage}
+                    trendLabel="vs anno precedente"
                 />
                 <KPICard
                     title="Anno Precedente"

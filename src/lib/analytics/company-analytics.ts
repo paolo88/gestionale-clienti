@@ -11,6 +11,7 @@ export interface CompanyAnalytics {
     lifetimeValue: number;
     currentYTD: number;
     previousYTD: number;
+    deltaPercentage: number;
     monthlyTrend: { name: string; amount: number }[];
     annualTrend: { name: string; total: number }[];
     clientMix: { name: string; amount: number; percentage: number; value: number }[];
@@ -117,11 +118,16 @@ export async function getCompanyAnalytics(companyId: string, filterClientId?: st
         }))
         .sort((a, b) => b.amount - a.amount)
 
+    const deltaPercentage = previousYTD === 0
+        ? (currentYTD > 0 ? 100 : 0)
+        : ((currentYTD - previousYTD) / previousYTD) * 100
+
     return {
         company,
         lifetimeValue,
         currentYTD,
         previousYTD,
+        deltaPercentage,
         monthlyTrend,
         annualTrend,
         clientMix
