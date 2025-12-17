@@ -57,15 +57,14 @@ export async function createRevenueAction(data: RevenueFormValues) {
 
     // Upsert logic: if client+company+period matches, update amount
     // Constraint name might be needed if upsert fails, but unique index handles it.
-    const { error } = await supabase.from("revenues").upsert({
+    // Insert logic: allow multiple entries for the same period
+    const { error } = await supabase.from("revenues").insert({
         client_id: parsed.data.client_id,
         company_id: parsed.data.company_id,
         period: period,
         amount: parsed.data.amount,
         notes: parsed.data.notes,
         source: 'manual'
-    }, {
-        onConflict: 'client_id, company_id, period'
     })
 
     if (error) {
