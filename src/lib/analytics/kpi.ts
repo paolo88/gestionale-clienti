@@ -11,14 +11,19 @@ export interface KPIResult {
     topCompanies: { name: string; amount: number }[];
 }
 
-export async function getDashboardKPIs(): Promise<KPIResult> {
+export async function getDashboardKPIs(year?: number): Promise<KPIResult> {
     const supabase = await createClient()
     const now = new Date()
-    const currentYear = now.getFullYear()
-    const previousYear = currentYear - 1
+    const realCurrentYear = now.getFullYear()
+    const selectedYear = year || realCurrentYear
+    const previousYear = selectedYear - 1
 
-    // Fetch all revenues for current and previous year
-    // Optimized: In a real large app, you'd want to aggregate in SQL. For MVP (thousands of rows max), JS aggregation is fine.
+    // If selected year is in the past, we consider "YTD" as the full year.
+    // If selected year is current, we limit to current month.
+    const isPastYear = selectedYear < realCurrentYear
+    const maxMonth = isPastYear ? 11 : now.getMonth()
+
+    // Fetch all revenues for selected and previous year
     const { data: revenues, error } = await supabase
         .from("revenues")
         .select(`
@@ -27,17 +32,15 @@ export async function getDashboardKPIs(): Promise<KPIResult> {
             clients (name),
             companies (name)
         `)
-        .select(`
-            amount,
-            period,
-            clients (name),
-            companies (name)
-        `)
-        // Fetching all time for annual trend, or limit to 5-10 years if needed. 
-        // For now, let's fetch last 5 years to be safe/performant, or just remove filter for "All Time"
-        // User wants "Annual Data", usually implies history.
-        .gte("period", `${currentYear - 4}-01-01`)
-        .lte("period", `${currentYear}-12-31`)
+        // Optimize: Fetching specifically for relevant years to reduce payload?
+        // Or keep broad fetch if dataset is small.
+        // Let's filter by range to be safe.
+        // We need Selected Year and Previous Year for comparison.
+        // Plus Annual Trend needs history (e.g. 5 years).
+        // Let's broaden the query to cover Annual Trend range + Previous Year.
+        // Range: [SelectedYear - 4, SelectedYear]
+        .gte("period", `${selectedYear - 4}-01-01`)
+        .lte("period", `${selectedYear}-12-31`)
 
     if (error) throw new Error(error.message)
 
@@ -49,21 +52,20 @@ export async function getDashboardKPIs(): Promise<KPIResult> {
 
     // Initialize months
     for (let i = 0; i < 12; i++) {
-        const monthName = new Date(2024, i, 1).toLocaleString('default', { month: 'short' })
         monthlyData[i] = { current: 0, previous: 0 }
     }
 
     revenues?.forEach((rev: any) => {
         const date = new Date(rev.period)
-        const year = date.getFullYear()
-        const month = date.getMonth()
+        const rowYear = date.getFullYear()
+        const rowMonth = date.getMonth()
         const amount = Number(rev.amount)
 
-        if (year === currentYear) {
+        if (rowYear === selectedYear) {
             currentYTD += amount
-            monthlyData[month].current += amount
+            monthlyData[rowMonth].current += amount
 
-            // Top Lists based on Current Year
+            // Top Lists based on Selected Year
             const clientName = Array.isArray(rev.clients)
                 ? rev.clients[0]?.name
                 : (rev.clients as any)?.name || "Unknown"
@@ -74,27 +76,31 @@ export async function getDashboardKPIs(): Promise<KPIResult> {
                 : (rev.companies as any)?.name || "Unknown"
             companyMap[companyName] = (companyMap[companyName] || 0) + amount
 
-        } else if (year === previousYear) {
-            // For YTD comparison, strict YTD means up to current month/day.
-            // Broad YTD means total previous year? Usually YTD is point-in-time.
-            // Let's do YTD (Jan to Now) vs Previous YTD (Jan to Same Month Last Year)
-            if (month <= now.getMonth()) {
+        } else if (rowYear === previousYear) {
+            // Comparisons
+            // If we are looking at a past year (e.g. 2025), we want to compare Full 2025 vs Full 2024.
+            // If we are looking at Current Year (2026), we compare Jan 2026 vs Jan 2025.
+            if (rowMonth <= maxMonth) {
                 previousYTD += amount
             }
-            monthlyData[month].previous += amount
+            monthlyData[rowMonth].previous += amount
         }
     })
 
-    // Calculate Annual Trend (Last 5 Years)
+    // Calculate Annual Trend (Last 5 Years relative to Selected Year)
     const annualMap: Record<string, number> = {}
     revenues?.forEach((rev: any) => {
-        const year = new Date(rev.period).getFullYear().toString()
-        annualMap[year] = (annualMap[year] || 0) + Number(rev.amount)
+        const y = new Date(rev.period).getFullYear()
+        // Only include up to selected year
+        if (y <= selectedYear && y >= selectedYear - 4) {
+            const yStr = y.toString()
+            annualMap[yStr] = (annualMap[yStr] || 0) + Number(rev.amount)
+        }
     })
 
-    const annualTrend = Object.keys(annualMap).sort().map(year => ({
-        name: year,
-        total: annualMap[year]
+    const annualTrend = Object.keys(annualMap).sort().map(y => ({
+        name: y,
+        total: annualMap[y]
     }))
 
     const delta = currentYTD - previousYTD

@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/utils"
 import { TrendChart } from "@/components/dashboard/trend-chart"
 import { DistributionPieChart } from "@/components/dashboard/distribution-pie-chart"
 import { ClientDetailFilters } from "@/components/clients/client-detail-filters"
+import { YearSelect } from "@/components/dashboard/year-select"
 
 type Props = {
     params: Promise<{ id: string }>
@@ -20,8 +21,11 @@ export default async function ClientDetailPage(props: Props) {
 
     // Explicitly grab company_id string from searchParams
     const filterCompanyId = typeof searchParams.company_id === 'string' ? searchParams.company_id : undefined
+    const filterChannel = typeof searchParams.channel === 'string' ? searchParams.channel : undefined
+    const yearParam = typeof searchParams.year === 'string' ? searchParams.year : undefined
+    const year = yearParam ? parseInt(yearParam) : undefined
 
-    const data = await getClientAnalytics(params.id, filterCompanyId)
+    const data = await getClientAnalytics(params.id, filterCompanyId, filterChannel, year)
     const companies = await getCompanies() || []
 
     if (!data) return <div>Cliente non trovato</div>
@@ -35,7 +39,10 @@ export default async function ClientDetailPage(props: Props) {
                     title={data.client.name}
                     description={`Dettaglio cliente. ${filterCompanyId ? '(Filtrato per azienda)' : ''}`}
                 />
-                <ClientDetailFilters companies={companyList} />
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <YearSelect />
+                    <ClientDetailFilters companies={companyList} />
+                </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">

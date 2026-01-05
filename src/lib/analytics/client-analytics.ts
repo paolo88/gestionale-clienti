@@ -20,10 +20,18 @@ export interface ClientAnalytics {
     companyMix: { name: string; amount: number; percentage: number; value: number }[];
 }
 
-export async function getClientAnalytics(clientId: string, filterCompanyId?: string, filterChannel?: string): Promise<ClientAnalytics | null> {
+export async function getClientAnalytics(clientId: string, filterCompanyId?: string, filterChannel?: string, year?: number): Promise<ClientAnalytics | null> {
     const supabase = await createClient()
     const now = new Date()
-    const currentYear = now.getFullYear()
+    const realCurrentYear = now.getFullYear()
+    const selectedYear = year || realCurrentYear
+    const previousYear = selectedYear - 1
+
+    // Logic for YTD comparison:
+    // If selected year is past, we take full year.
+    // If selected year is current, we limit to current month.
+    const isPastYear = selectedYear < realCurrentYear
+    const maxMonth = isPastYear ? 11 : now.getMonth()
 
     // 1. Fetch BASIC INFO
     const { data: client, error: clientError } = await supabase
@@ -81,43 +89,43 @@ export async function getClientAnalytics(clientId: string, filterCompanyId?: str
     let previousYTD = 0
     const companyMap: Record<string, number> = {}
 
-    const previousYear = currentYear - 1
-
-    // Monthly Trend (Last 12 Months or Current Year?)
-    // Let's do Current Year Monthly Trend for simplicity or Last 12 Months. 
-    // Requirement says "Trend", usually YTD monthly is good.
-    // Annual Trend (Last 5 Years)
-    const annualData: Record<number, number> = {}
-    for (let i = 0; i < 5; i++) annualData[currentYear - 4 + i] = 0
-
+    // Monthly Trend (Selected Year)
     const monthlyData: Record<number, number> = {}
     for (let i = 0; i < 12; i++) monthlyData[i] = 0
+
+    // Annual Trend (Last 5 Years relative to Selected Year)
+    const annualData: Record<number, number> = {}
+    for (let i = 0; i < 5; i++) annualData[selectedYear - 4 + i] = 0
 
     revenues?.forEach((rev: any) => {
         const amount = Number(rev.amount)
         const date = new Date(rev.period)
-        const year = date.getFullYear()
+        const rowYear = date.getFullYear()
 
         lifetimeValue += amount
 
-        // Annual Data population
-        if (annualData[year] !== undefined) {
-            annualData[year] += amount
+        // Annual Data population (only for relevant window)
+        if (annualData[rowYear] !== undefined) {
+            annualData[rowYear] += amount
         }
 
-        if (year === currentYear) {
+        if (rowYear === selectedYear) {
             currentYTD += amount
             monthlyData[date.getMonth()] += amount
-        } else if (year === previousYear) {
-            if (date.getMonth() <= now.getMonth()) {
+
+            // Company Map (for selected year)
+            // Or should company mix be lifetime? Usually dashboard filters affect all widgets.
+            // Let's make company mix follow the selected year filter (like YTD).
+            const companyName = Array.isArray(rev.companies)
+                ? rev.companies[0]?.name
+                : (rev.companies as any)?.name || "Unknown"
+            companyMap[companyName] = (companyMap[companyName] || 0) + amount
+
+        } else if (rowYear === previousYear) {
+            if (date.getMonth() <= maxMonth) {
                 previousYTD += amount
             }
         }
-
-        const companyName = Array.isArray(rev.companies)
-            ? rev.companies[0]?.name
-            : (rev.companies as any)?.name || "Unknown"
-        companyMap[companyName] = (companyMap[companyName] || 0) + amount
     })
 
     const monthlyTrend = Object.keys(monthlyData).map(key => ({

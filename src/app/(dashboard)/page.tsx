@@ -6,14 +6,25 @@ import { TrendChart } from "@/components/dashboard/trend-chart"
 import { TopList } from "@/components/dashboard/top-list"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
 
-export default async function DashboardPage() {
-  // Determine active counts could be a separate query, for now mocking active counts or fetching simple count
-  // Ideally getDashboardKPIs returns everything
-  const kpis = await getDashboardKPIs()
+import { YearSelect } from "@/components/dashboard/year-select"
+
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function DashboardPage(props: Props) {
+  const searchParams = await props.searchParams
+  const yearParam = typeof searchParams.year === 'string' ? searchParams.year : undefined
+  const year = yearParam ? parseInt(yearParam) : undefined
+
+  const kpis = await getDashboardKPIs(year)
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Dashboard" description="Panoramica dell'andamento commerciale." />
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <PageHeader title="Dashboard" description="Panoramica dell'andamento commerciale." />
+        <YearSelect />
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
