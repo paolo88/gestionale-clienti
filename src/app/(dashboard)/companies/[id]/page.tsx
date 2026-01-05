@@ -55,9 +55,9 @@ export default async function CompanyDetailPage(props: Props) {
                 />
                 <KPICard
                     title="Anno Precedente"
-                    value={formatCurrency(data.previousYTD)}
+                    value={formatCurrency(data.previousYearTotal)}
                     icon={TrendingUp}
-                    description="Stesso periodo anno scorso"
+                    description="Fatturato totale anno scorso"
                 />
             </div>
 

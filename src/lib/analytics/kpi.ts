@@ -3,6 +3,7 @@ import { createClient } from "@/lib/server-supabase"
 export interface KPIResult {
     currentYTD: number;
     previousYTD: number;
+    previousYearTotal: number;
     delta: number;
     deltaPercentage: number;
     monthlyTrend: { name: string; current: number; previous: number }[];
@@ -32,12 +33,6 @@ export async function getDashboardKPIs(year?: number): Promise<KPIResult> {
             clients (name),
             companies (name)
         `)
-        // Optimize: Fetching specifically for relevant years to reduce payload?
-        // Or keep broad fetch if dataset is small.
-        // Let's filter by range to be safe.
-        // We need Selected Year and Previous Year for comparison.
-        // Plus Annual Trend needs history (e.g. 5 years).
-        // Let's broaden the query to cover Annual Trend range + Previous Year.
         // Range: [SelectedYear - 4, SelectedYear]
         .gte("period", `${selectedYear - 4}-01-01`)
         .lte("period", `${selectedYear}-12-31`)
@@ -46,6 +41,7 @@ export async function getDashboardKPIs(year?: number): Promise<KPIResult> {
 
     let currentYTD = 0
     let previousYTD = 0
+    let previousYearTotal = 0
     const monthlyData: Record<string, { current: number; previous: number }> = {}
     const clientMap: Record<string, number> = {}
     const companyMap: Record<string, number> = {}
@@ -77,12 +73,16 @@ export async function getDashboardKPIs(year?: number): Promise<KPIResult> {
             companyMap[companyName] = (companyMap[companyName] || 0) + amount
 
         } else if (rowYear === previousYear) {
-            // Comparisons
-            // If we are looking at a past year (e.g. 2025), we want to compare Full 2025 vs Full 2024.
-            // If we are looking at Current Year (2026), we compare Jan 2026 vs Jan 2025.
+            // "Previous Year" Display Logic:
+            // 1. previousYearTotal: Sum of everything in previous year (for Card Value)
+            previousYearTotal += amount
+
+            // 2. previousYTD: Strict sum (Jan-Now) for Delta % calculation
             if (rowMonth <= maxMonth) {
                 previousYTD += amount
             }
+
+            // 3. Monthly Trend: Show FULL previous year data (no maxMonth limit) for better context
             monthlyData[rowMonth].previous += amount
         }
     })
@@ -125,6 +125,7 @@ export async function getDashboardKPIs(year?: number): Promise<KPIResult> {
     return {
         currentYTD,
         previousYTD,
+        previousYearTotal,
         delta,
         deltaPercentage,
         monthlyTrend,

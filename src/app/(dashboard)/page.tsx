@@ -35,10 +35,10 @@ export default async function DashboardPage(props: Props) {
           trendLabel="vs anno precedente"
         />
         <KPICard
-          title="Anno Precedente (YTD)"
-          value={formatCurrency(kpis.previousYTD)}
+          title="Anno Precedente"
+          value={formatCurrency(kpis.previousYearTotal)}
           icon={TrendingUp}
-          description="Stesso periodo anno scorso"
+          description="Fatturato totale anno scorso"
         />
         <KPICard
           title="Top Clienti"

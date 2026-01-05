@@ -14,6 +14,7 @@ export interface ClientAnalytics {
     lifetimeValue: number;
     currentYTD: number;
     previousYTD: number;
+    previousYearTotal: number;
     deltaPercentage: number;
     monthlyTrend: { name: string; amount: number }[];
     annualTrend: { name: string; total: number }[];
@@ -87,6 +88,7 @@ export async function getClientAnalytics(clientId: string, filterCompanyId?: str
     let lifetimeValue = 0
     let currentYTD = 0
     let previousYTD = 0
+    let previousYearTotal = 0
     const companyMap: Record<string, number> = {}
 
     // Monthly Trend (Selected Year)
@@ -122,6 +124,7 @@ export async function getClientAnalytics(clientId: string, filterCompanyId?: str
             companyMap[companyName] = (companyMap[companyName] || 0) + amount
 
         } else if (rowYear === previousYear) {
+            previousYearTotal += amount
             if (date.getMonth() <= maxMonth) {
                 previousYTD += amount
             }
@@ -156,6 +159,7 @@ export async function getClientAnalytics(clientId: string, filterCompanyId?: str
         lifetimeValue,
         currentYTD,
         previousYTD,
+        previousYearTotal,
         deltaPercentage,
         monthlyTrend,
         annualTrend,
