@@ -17,10 +17,16 @@ export interface CompanyAnalytics {
     clientMix: { name: string; amount: number; percentage: number; value: number }[];
 }
 
-export async function getCompanyAnalytics(companyId: string, filterClientId?: string, filterChannel?: string): Promise<CompanyAnalytics | null> {
+export async function getCompanyAnalytics(companyId: string, filterClientId?: string, filterChannel?: string, year?: number): Promise<CompanyAnalytics | null> {
     const supabase = await createClient()
     const now = new Date()
-    const currentYear = now.getFullYear()
+    const realCurrentYear = now.getFullYear()
+    const selectedYear = year || realCurrentYear
+    const previousYear = selectedYear - 1
+
+    // Logic for YTD comparison:
+    const isPastYear = selectedYear < realCurrentYear
+    const maxMonth = isPastYear ? 11 : now.getMonth()
 
     // 1. Fetch BASIC INFO
     const { data: company } = await supabase
@@ -64,39 +70,39 @@ export async function getCompanyAnalytics(companyId: string, filterClientId?: st
     let previousYTD = 0
     const clientMap: Record<string, number> = {}
 
-    const previousYear = currentYear - 1
-
     // Annual Trend
     const annualData: Record<number, number> = {}
-    for (let i = 0; i < 5; i++) annualData[currentYear - 4 + i] = 0
+    for (let i = 0; i < 5; i++) annualData[selectedYear - 4 + i] = 0
 
+    // Monthly Trend (Selected Year)
     const monthlyData: Record<number, number> = {}
     for (let i = 0; i < 12; i++) monthlyData[i] = 0
 
     revenues?.forEach((rev: any) => {
         const amount = Number(rev.amount)
         const date = new Date(rev.period)
-        const year = date.getFullYear()
+        const rowYear = date.getFullYear()
 
         lifetimeValue += amount
 
-        if (annualData[year] !== undefined) {
-            annualData[year] += amount
+        if (annualData[rowYear] !== undefined) {
+            annualData[rowYear] += amount
         }
 
-        if (year === currentYear) {
+        if (rowYear === selectedYear) {
             currentYTD += amount
             monthlyData[date.getMonth()] += amount
-        } else if (year === previousYear) {
-            if (date.getMonth() <= now.getMonth()) {
+
+            const clientName = Array.isArray(rev.clients)
+                ? rev.clients[0]?.name
+                : (rev.clients as any)?.name || "Unknown"
+            clientMap[clientName] = (clientMap[clientName] || 0) + amount
+
+        } else if (rowYear === previousYear) {
+            if (date.getMonth() <= maxMonth) {
                 previousYTD += amount
             }
         }
-
-        const clientName = Array.isArray(rev.clients)
-            ? rev.clients[0]?.name
-            : (rev.clients as any)?.name || "Unknown"
-        clientMap[clientName] = (clientMap[clientName] || 0) + amount
     })
 
     const monthlyTrend = Object.keys(monthlyData).map(key => ({

@@ -8,6 +8,8 @@ import { TrendChart } from "@/components/dashboard/trend-chart"
 import { DistributionPieChart } from "@/components/dashboard/distribution-pie-chart"
 import { CompanyDetailFilters } from "@/components/companies/company-detail-filters"
 
+import { YearSelect } from "@/components/dashboard/year-select"
+
 type Props = {
     params: Promise<{ id: string }>
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -20,8 +22,10 @@ export default async function CompanyDetailPage(props: Props) {
     // Explicitly grab client_id and channel strings
     const filterClientId = typeof searchParams.client_id === 'string' ? searchParams.client_id : undefined
     const filterChannel = typeof searchParams.channel === 'string' ? searchParams.channel : undefined
+    const yearParam = typeof searchParams.year === 'string' ? searchParams.year : undefined
+    const year = yearParam ? parseInt(yearParam) : undefined
 
-    const data = await getCompanyAnalytics(params.id, filterClientId, filterChannel)
+    const data = await getCompanyAnalytics(params.id, filterClientId, filterChannel, year)
     const clients = await getClients() || []
 
     if (!data) return <div>Azienda non trovata</div>
@@ -35,7 +39,10 @@ export default async function CompanyDetailPage(props: Props) {
                     title={data.company.name}
                     description={`Dettaglio azienda. ${filterClientId ? '(Filtrato per cliente)' : ''}`}
                 />
-                <CompanyDetailFilters clients={clientList} />
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <YearSelect />
+                    <CompanyDetailFilters clients={clientList} />
+                </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
